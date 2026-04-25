@@ -1,0 +1,11 @@
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.production
+
+# Dependencies — no need to commit these either
+node_modules/
+
+# OS files
+.DS_Store
+/generated/prisma

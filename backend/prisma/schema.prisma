@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model orders {
+  order_id       Int              @id
+  user_id        Int?
+  card_id        Int?
+  delivery_id    Int?
+  order_date     DateTime         @db.Date
+  status         String?          @default("Pending") @db.VarChar(50)
+  order_item     order_item[]
+  order_shipping order_shipping[]
+  payment_card   payment_card?    @relation(fields: [card_id], references: [card_id], onUpdate: NoAction)
+  delivery_plan  delivery_plan?   @relation(fields: [delivery_id], references: [delivery_id], onUpdate: NoAction)
+  customer       customer?        @relation(fields: [user_id], references: [user_id], onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model staff {
+  user_id      Int        @id
+  warehouse_id Int?
+  salary       Decimal?   @default(0) @db.Decimal(10, 0)
+  job_title    String     @db.VarChar(100)
+  address_id   Int?
+  address      address?   @relation(fields: [address_id], references: [address_id], onUpdate: NoAction)
+  users        users      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  warehouse    warehouse? @relation(fields: [warehouse_id], references: [warehouse_id], onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model stock {
+  quantity     Int?      @default(0)
+  product_id   Int
+  warehouse_id Int
+  products     product   @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction)
+  warehouses   warehouse @relation(fields: [warehouse_id], references: [warehouse_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([product_id, warehouse_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model users {
+  user_id     Int       @id
+  first_name  String    @db.VarChar(50)
+  middle_name String?   @db.VarChar(50)
+  last_name   String    @db.VarChar(50)
+  email       String    @unique @db.VarChar(100)
+  password    String    @db.VarChar(255)
+  customer    customer?
+  staff       staff?
+}
+
+model address {
+  address_id       Int                @id
+  country          String             @db.VarChar(100)
+  street           String             @db.VarChar(100)
+  city             String             @db.VarChar(100)
+  state            String             @db.VarChar(100)
+  zip_code         String             @db.VarChar(10)
+  customer_address customer_address[]
+  order_shipping   order_shipping[]
+  payment_card     payment_card[]
+  staff            staff[]
+  supplier         supplier[]
+  warehouse        warehouse[]
+}
+
+model customer {
+  user_id          Int                @id
+  balance          Decimal?           @default(0) @db.Decimal(10, 2)
+  cart_item        cart_item[]
+  users            users              @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  customer_address customer_address[]
+  orders           orders[]
+  payment_card     payment_card[]
+}
+
+model customer_address {
+  user_id    Int
+  address_id Int
+  address    address  @relation(fields: [address_id], references: [address_id], onDelete: Cascade, onUpdate: NoAction)
+  customer   customer @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, address_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model delivery_plan {
+  delivery_id   Int       @id
+  delivery_type String?   @db.VarChar(50)
+  delivery_cost Decimal   @db.Decimal(10, 2)
+  ship_date     DateTime? @db.Date
+  delivery_date DateTime? @db.Date
+  orders        orders[]
+}
+
+model order_item {
+  order_id       Int
+  product_id     Int
+  quantity       Int
+  purchase_price Decimal @db.Decimal(10, 2)
+  orders         orders  @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+  product        product @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([order_id, product_id])
+}
+
+model order_shipping {
+  order_id   Int
+  address_id Int
+  address    address @relation(fields: [address_id], references: [address_id], onDelete: NoAction, onUpdate: NoAction)
+  orders     orders  @relation(fields: [order_id], references: [order_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([order_id, address_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payment_card {
+  card_id     Int      @id
+  address_id  Int?
+  user_id     Int
+  card_type   String   @db.VarChar(20)
+  card_number Decimal  @db.Decimal(20, 0)
+  expiry_date DateTime @db.Date
+  cvv         String   @db.VarChar(3)
+  orders      orders[]
+  address     address? @relation(fields: [address_id], references: [address_id], onDelete: Cascade, onUpdate: NoAction)
+  customer    customer @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model product {
+  product_id    Int             @id
+  name          String          @db.VarChar(100)
+  category      String          @db.VarChar(100)
+  description   String?
+  type          String?         @db.VarChar(50)
+  size          String?         @db.VarChar(50)
+  brand         String?         @db.VarChar(100)
+  cart_item     cart_item[]
+  order_item    order_item[]
+  product_price product_price[]
+  stock         stock[]
+  supplies      supplies[]
+}
+
+model product_price {
+  price_id   Int       @id
+  product_id Int
+  sell_price Decimal   @db.Decimal(10, 2)
+  start_date DateTime  @db.Date
+  end_date   DateTime? @db.Date
+  product    product   @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model supplier {
+  supplier_id Int        @id
+  address_id  Int?
+  name        String     @db.VarChar(100)
+  address     address?   @relation(fields: [address_id], references: [address_id], onUpdate: NoAction)
+  supplies    supplies[]
+}
+
+model supplies {
+  product_id     Int
+  supplier_id    Int
+  supplier_price Decimal? @db.Decimal(10, 2)
+  start_date     DateTime @db.Date
+  product        product  @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction)
+  supplier       supplier @relation(fields: [supplier_id], references: [supplier_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([product_id, supplier_id, start_date])
+}
+
+model warehouse {
+  warehouse_id Int      @id
+  capacity     Int?
+  address_id   Int?
+  staff        staff[]
+  stock        stock[]
+  address      address? @relation(fields: [address_id], references: [address_id], onUpdate: NoAction)
+}
+
+model cart_item {
+  user_id    Int
+  product_id Int
+  quantity   Int      @default(1)
+  product    product  @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction)
+  customer   customer @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, product_id])
+}
