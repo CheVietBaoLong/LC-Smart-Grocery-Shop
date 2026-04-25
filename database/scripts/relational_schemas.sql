@@ -206,4 +206,9 @@ CREATE OR REPLACE VIEW v_customer_balance AS
     LEFT JOIN Orders o  ON o.user_id  = c.user_id
     LEFT JOIN Order_Item oi ON oi.order_id  = o.order_id
     GROUP BY c.user_id, c.balance;
- 
+
+CREATE TABLE cart_item (
+  user_id INT REFERENCES Customer(user_id) ON DELETE CASCADE,
+  product_id INT REFERENCES Product(product_id) ON DELETE CASCADE,
+  quantity INT NOT NULL DEFAULT 1
+);
