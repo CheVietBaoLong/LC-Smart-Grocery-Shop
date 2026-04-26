@@ -6,6 +6,12 @@
 # Dependencies — no need to commit these either
 node_modules/
 
+node_modules/.prisma
+
 # OS files
 .DS_Store
 /generated/prisma
+
+# Logs
+*.log
+npm-debug.log*
