@@ -9,7 +9,7 @@ datasource db {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model orders {
-  order_id       Int              @id
+  order_id       Int              @id @default(autoincrement())
   user_id        Int?
   card_id        Int?
   delivery_id    Int?
@@ -48,7 +48,7 @@ model stock {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model users {
-  user_id     Int       @id
+  user_id     Int       @id @default(autoincrement())
   first_name  String    @db.VarChar(50)
   middle_name String?   @db.VarChar(50)
   last_name   String    @db.VarChar(50)
@@ -59,7 +59,7 @@ model users {
 }
 
 model address {
-  address_id       Int                @id
+  address_id       Int                @id @default(autoincrement())
   country          String             @db.VarChar(100)
   street           String             @db.VarChar(100)
   city             String             @db.VarChar(100)
@@ -94,7 +94,7 @@ model customer_address {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model delivery_plan {
-  delivery_id   Int       @id
+  delivery_id   Int       @id @default(autoincrement())
   delivery_type String?   @db.VarChar(50)
   delivery_cost Decimal   @db.Decimal(10, 2)
   ship_date     DateTime? @db.Date
@@ -124,7 +124,7 @@ model order_shipping {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model payment_card {
-  card_id     Int      @id
+  card_id     Int      @id @default(autoincrement())
   address_id  Int?
   user_id     Int
   card_type   String   @db.VarChar(20)
@@ -137,7 +137,7 @@ model payment_card {
 }
 
 model product {
-  product_id    Int             @id
+  product_id    Int             @id @default(autoincrement())
   name          String          @db.VarChar(100)
   category      String          @db.VarChar(100)
   description   String?
@@ -152,7 +152,7 @@ model product {
 }
 
 model product_price {
-  price_id   Int       @id
+  price_id   Int       @id @default(autoincrement())
   product_id Int
   sell_price Decimal   @db.Decimal(10, 2)
   start_date DateTime  @db.Date
@@ -161,7 +161,7 @@ model product_price {
 }
 
 model supplier {
-  supplier_id Int        @id
+  supplier_id Int        @id @default(autoincrement())
   address_id  Int?
   name        String     @db.VarChar(100)
   address     address?   @relation(fields: [address_id], references: [address_id], onUpdate: NoAction)
@@ -180,7 +180,7 @@ model supplies {
 }
 
 model warehouse {
-  warehouse_id Int      @id
+  warehouse_id Int      @id @default(autoincrement())
   capacity     Int?
   address_id   Int?
   staff        staff[]

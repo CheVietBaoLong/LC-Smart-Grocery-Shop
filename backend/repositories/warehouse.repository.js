@@ -4,14 +4,14 @@ const prisma = require('../prisma/client');
 
 async function findAll() {
   return prisma.warehouse.findMany({
-    include: { address: true, stocks: { include: { product: true } } },
+    include: { address: true, stock: { include: { products: true } } },
   });
 }
 
 async function findById(warehouse_id) {
   return prisma.warehouse.findUnique({
     where: { warehouse_id },
-    include: { address: true, stocks: { include: { product: true } } },
+    include: { address: true, stock: { include: { product: true } } },
   });
 }
 
