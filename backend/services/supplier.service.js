@@ -28,7 +28,12 @@ async function deleteSupplier(supplier_id) {
 }
 
 async function addSupply(product_id, supplier_id, data) {
-  return supplierRepo.addSupply({ product_id, supplier_id, ...data });
+  return supplierRepo.addSupply({
+    product_id,
+    supplier_id,
+    ...data,
+    start_date: new Date(data.start_date),
+  });
 }
 
 async function getSuppliesByProduct(product_id) {

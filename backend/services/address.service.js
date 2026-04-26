@@ -44,7 +44,11 @@ async function getMyCards(user_id) {
 
 async function addCard(user_id, data) {
   // NOTE: Storing raw card data is insecure. Use a payment provider in production.
-  return addressRepo.createCard({ ...data, user_id });
+  return addressRepo.createCard({
+    ...data,
+    user_id,
+    expiry_date: new Date(data.expiry_date),
+  });
 }
 
 async function removeCard(requesterId, requesterRole, card_id) {

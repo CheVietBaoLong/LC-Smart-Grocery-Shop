@@ -42,7 +42,7 @@ async function createOrder({ user_id, card_id, delivery_id, order_date, items, a
   );
 
   return orderRepo.create({
-    orderData: { user_id, card_id, delivery_id, order_date, status: 'Pending' },
+    orderData: { user_id, card_id, delivery_id, order_date: new Date(order_date), status: 'Pending' },
     items: enrichedItems,
     address_id,
   });

@@ -3,7 +3,7 @@ const prisma = require('../prisma/client');
 async function findAll() {
   return prisma.orders.findMany({
     include: {
-      order_items: { include: { product: true } },
+      order_item: { include: { product: true } },
       delivery_plan: true,
       order_shipping: { include: { address: true } },
     },
@@ -14,7 +14,7 @@ async function findById(order_id) {
   return prisma.orders.findUnique({
     where: { order_id },
     include: {
-      order_items: { include: { product: true } },
+      order_item: { include: { product: true } },
       delivery_plan: true,
       order_shipping: { include: { address: true } },
       payment_card: true,
@@ -26,7 +26,7 @@ async function findByCustomer(user_id) {
   return prisma.orders.findMany({
     where: { user_id },
     include: {
-      order_items: { include: { product: true } },
+      order_item: { include: { product: true } },
       delivery_plan: true,
       order_shipping: { include: { address: true } },
     },
