@@ -1,4 +1,3 @@
-const e = require('express');
 const addressRepo = require('../repositories/address.repository');
 const { NotFoundError, ForbiddenError } = require('../utils/errors');
 
@@ -18,23 +17,33 @@ async function deleteAddress(address_id) {
   return addressRepo.remove(address_id);
 }
 
-// ── Customer Addresses ─────────────────────────────────────────────────────────
+// ── My Addresses (role-aware) ──────────────────────────────────────────────────
 
-async function getMyAddresses(user_id) {
+async function getMyAddresses(user_id, role) {
+  if (role === 'staff') {
+    const staff = await addressRepo.getStaffAddress(user_id);
+    return staff?.address ? [{ address: staff.address }] : [];
+  }
   return addressRepo.getCustomerAddresses(user_id);
 }
 
-async function addAddressToCustomer(user_id, addressData) {
+async function addAddressToUser(user_id, role, addressData) {
   const address = await addressRepo.create(addressData);
-  await addressRepo.addCustomerAddress(user_id, address.address_id);
+  if (role === 'staff') {
+    await addressRepo.setStaffAddress(user_id, address.address_id);
+  } else {
+    await addressRepo.addCustomerAddress(user_id, address.address_id);
+  }
   return address;
 }
 
-async function removeAddressFromCustomer(requesterId, requesterRole, user_id, address_id) {
-  if (requesterRole === 'customer' && requesterId !== user_id) {
-    throw new ForbiddenError('Access denied');
+async function removeAddressFromUser(user_id, role, address_id) {
+  if (role === 'staff') {
+    await addressRepo.setStaffAddress(user_id, null);
+  } else {
+    await addressRepo.removeCustomerAddress(user_id, address_id);
   }
-  return addressRepo.removeCustomerAddress(user_id, address_id);
+  return addressRepo.remove(address_id);
 }
 
 // ── Payment Cards ──────────────────────────────────────────────────────────────
@@ -64,8 +73,8 @@ module.exports = {
   updateAddress,
   deleteAddress,
   getMyAddresses,
-  addAddressToCustomer,
-  removeAddressFromCustomer,
+  addAddressToUser,
+  removeAddressFromUser,
   getMyCards,
   addCard,
   removeCard,

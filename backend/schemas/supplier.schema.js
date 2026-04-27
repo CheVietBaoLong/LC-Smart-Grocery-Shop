@@ -3,6 +3,11 @@ const { z } = require('zod');
 const createSupplierSchema = z.object({
   name:       z.string().min(1, 'Supplier name is required'),
   address_id: z.number().int().positive().optional(),
+  street:     z.string().min(1).optional(),
+  city:       z.string().min(1).optional(),
+  state:      z.string().min(1).optional(),
+  zip_code:   z.string().min(1).optional(),
+  country:    z.string().min(1).optional(),
 });
 
 const updateSupplierSchema = z.object({

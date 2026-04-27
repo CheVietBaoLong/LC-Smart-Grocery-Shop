@@ -3,6 +3,11 @@ const { z } = require('zod');
 const createWarehouseSchema = z.object({
   capacity:   z.number().int().positive().optional(),
   address_id: z.number().int().positive().optional(),
+  street:     z.string().min(1).optional(),
+  city:       z.string().min(1).optional(),
+  state:      z.string().min(1).optional(),
+  zip_code:   z.string().min(1).optional(),
+  country:    z.string().min(1).optional(),
 });
 
 const stockSchema = z.object({

@@ -2,7 +2,7 @@ const addressService = require('../services/address.service');
 
 async function getMyAddresses(req, res, next) {
   try {
-    const addresses = await addressService.getMyAddresses(req.user.user_id);
+    const addresses = await addressService.getMyAddresses(req.user.user_id, req.user.role);
     res.status(200).json({ status: 'success', data: addresses });
   } catch (err) {
     next(err);
@@ -11,7 +11,7 @@ async function getMyAddresses(req, res, next) {
 
 async function addAddress(req, res, next) {
   try {
-    const address = await addressService.addAddressToCustomer(req.user.user_id, req.body);
+    const address = await addressService.addAddressToUser(req.user.user_id, req.user.role, req.body);
     res.status(201).json({ status: 'success', data: address });
   } catch (err) {
     next(err);
@@ -21,12 +21,7 @@ async function addAddress(req, res, next) {
 async function removeAddress(req, res, next) {
   try {
     const address_id = parseInt(req.params.addressId);
-    await addressService.removeAddressFromCustomer(
-      req.user.user_id,
-      req.user.role,
-      req.user.user_id,
-      address_id
-    );
+    await addressService.removeAddressFromUser(req.user.user_id, req.user.role, address_id);
     res.status(204).send();
   } catch (err) {
     next(err);

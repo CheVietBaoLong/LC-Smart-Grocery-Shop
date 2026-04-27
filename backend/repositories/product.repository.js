@@ -4,8 +4,13 @@ async function findAll() {
   return prisma.product.findMany({
     include: {
       product_price: {
-        where: { end_date: null }, // current active price only
+        where: { end_date: null },
       },
+      supplies: {
+        orderBy: { start_date: 'desc' },
+        take: 1,
+      },
+      stock: true,
     },
   });
 }

@@ -18,6 +18,22 @@ async function remove(address_id) {
   return prisma.address.delete({ where: { address_id } });
 }
 
+// ── Staff Address ──────────────────────────────────────────────────────────────
+
+async function getStaffAddress(user_id) {
+  return prisma.staff.findUnique({
+    where: { user_id },
+    include: { address: true },
+  });
+}
+
+async function setStaffAddress(user_id, address_id) {
+  return prisma.staff.update({
+    where: { user_id },
+    data: { address_id },
+  });
+}
+
 // ── Customer Address (junction) ────────────────────────────────────────────────
 
 async function getCustomerAddresses(user_id) {
@@ -60,6 +76,8 @@ module.exports = {
   create,
   update,
   remove,
+  getStaffAddress,
+  setStaffAddress,
   getCustomerAddresses,
   addCustomerAddress,
   removeCustomerAddress,

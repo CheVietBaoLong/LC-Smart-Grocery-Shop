@@ -1,5 +1,6 @@
 const supplierRepo = require('../repositories/supplier.repository');
 const warehouseRepo = require('../repositories/warehouse.repository');
+const productRepo = require('../repositories/product.repository');
 const { NotFoundError, BadRequestError } = require('../utils/errors');
 
 async function getAllSuppliers() {
@@ -64,6 +65,19 @@ async function receiveSupply(supplier_id, { product_id, supplier_price, quantity
   const existing = target.stock.find(s => s.product_id === product_id);
   const newQty = (existing?.quantity ?? 0) + quantity;
   await warehouseRepo.upsertStock(product_id, target.warehouse_id, newQty);
+
+  if (supplier_price != null) {
+    const currentPrice = await productRepo.getCurrentPrice(product_id);
+    const sellPrice = currentPrice ? parseFloat(currentPrice.sell_price) : null;
+    if (sellPrice === null || supplier_price < sellPrice) {
+      const effectiveDate = start_date ?? new Date().toISOString().split('T')[0];
+      await productRepo.addPrice({
+        product_id,
+        sell_price: supplier_price,
+        start_date: effectiveDate,
+      });
+    }
+  }
 
   return { warehouse_id: target.warehouse_id, product_id, quantity_added: quantity };
 }
