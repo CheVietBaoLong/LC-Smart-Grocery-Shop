@@ -1,27 +1,25 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext } from 'react';
 
 const AuthContext = createContext();
 
+function parseToken(token) {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return { user_id: payload.user_id, email: payload.email, role: payload.role };
+  } catch {
+    return null;
+  }
+}
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [user, setUser] = useState(() => parseToken(localStorage.getItem('token')));
 
-  useEffect(() => {
-    if (token) {
-      // Decode token to get user info
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setUser({ userId: payload.userId, role: payload.role });
-      } catch (error) {
-        console.error('Invalid token');
-        logout();
-      }
-    }
-  }, [token]);
-
-  const login = (newToken, role) => {
+  const login = (newToken) => {
     localStorage.setItem('token', newToken);
     setToken(newToken);
+    setUser(parseToken(newToken));
   };
 
   const logout = () => {

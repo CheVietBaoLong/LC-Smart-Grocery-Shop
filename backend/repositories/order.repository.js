@@ -1,4 +1,5 @@
 const prisma = require('../prisma/client');
+const { BadRequestError } = require('../utils/errors');
 
 async function findAll() {
   return prisma.orders.findMany({
@@ -33,9 +34,43 @@ async function findByCustomer(user_id) {
   });
 }
 
-// Creates order + order_items + order_shipping in one transaction
-async function create({ orderData, items, address_id }) {
+// Creates order + order_items + order_shipping in one transaction, deducting balance atomically
+async function create({ orderData, items, address_id, total }) {
   return prisma.$transaction(async (tx) => {
+    const customer = await tx.customer.findUnique({ where: { user_id: orderData.user_id } });
+    if (!customer || Number(customer.balance) < total) {
+      throw new BadRequestError('Insufficient balance');
+    }
+
+    await tx.customer.update({
+      where: { user_id: orderData.user_id },
+      data: { balance: { decrement: total } },
+    });
+
+    // Check and deduct stock for each item across warehouses
+    for (const item of items) {
+      const stocks = await tx.stock.findMany({
+        where: { product_id: item.product_id },
+        orderBy: { quantity: 'desc' },
+      });
+
+      const totalAvailable = stocks.reduce((sum, s) => sum + (s.quantity ?? 0), 0);
+      if (totalAvailable < item.quantity) {
+        throw new BadRequestError(`Insufficient stock for product ${item.product_id}`);
+      }
+
+      let remaining = item.quantity;
+      for (const s of stocks) {
+        if (remaining <= 0) break;
+        const deduct = Math.min(remaining, s.quantity ?? 0);
+        await tx.stock.update({
+          where: { product_id_warehouse_id: { product_id: item.product_id, warehouse_id: s.warehouse_id } },
+          data: { quantity: { decrement: deduct } },
+        });
+        remaining -= deduct;
+      }
+    }
+
     const order = await tx.orders.create({ data: orderData });
 
     await tx.order_item.createMany({
@@ -56,8 +91,19 @@ async function updateStatus(order_id, status) {
   return prisma.orders.update({ where: { order_id }, data: { status } });
 }
 
+async function cancelAndRefund(order_id, user_id, refundAmount) {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.orders.update({ where: { order_id }, data: { status: 'Cancelled' } });
+    await tx.customer.update({
+      where: { user_id },
+      data: { balance: { increment: refundAmount } },
+    });
+    return order;
+  });
+}
+
 async function remove(order_id) {
   return prisma.orders.delete({ where: { order_id } });
 }
 
-module.exports = { findAll, findById, findByCustomer, create, updateStatus, remove };
+module.exports = { findAll, findById, findByCustomer, create, updateStatus, cancelAndRefund, remove };

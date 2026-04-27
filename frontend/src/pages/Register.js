@@ -1,130 +1,78 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import API from '../api';
+import './Auth.css';
 
-function Register() {
-  const [formData, setFormData] = useState({
-    first_name: '',
-    middle_name: '',
-    last_name: '',
-    email: '',
-    password: '',
-    role: 'customer'
+export default function Register() {
+  const [form, setForm] = useState({
+    first_name: '', middle_name: '', last_name: '',
+    email: '', password: '',
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
+    setLoading(true);
     try {
-      await API.post('/auth/register', formData);
+      await API.post('/auth/register/customer', form);
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      const errors = err.response?.data?.errors;
+      if (errors) {
+        setError(Object.values(errors).flat().join(', '));
+      } else {
+        setError(err.response?.data?.message || 'Registration failed');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <h1>Register</h1>
-      {error && <p style={styles.error}>{error}</p>}
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input
-          type="text"
-          name="first_name"
-          placeholder="First Name"
-          value={formData.first_name}
-          onChange={handleChange}
-          style={styles.input}
-          required
-        />
-        <input
-          type="text"
-          name="middle_name"
-          placeholder="Middle Name (optional)"
-          value={formData.middle_name}
-          onChange={handleChange}
-          style={styles.input}
-        />
-        <input
-          type="text"
-          name="last_name"
-          placeholder="Last Name"
-          value={formData.last_name}
-          onChange={handleChange}
-          style={styles.input}
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          style={styles.input}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          style={styles.input}
-          required
-        />
-        <select
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          style={styles.input}
-        >
-          <option value="customer">Customer</option>
-          <option value="staff">Staff</option>
-        </select>
-        <button type="submit" style={styles.button}>Register</button>
-      </form>
-      <p>Already have an account? <Link to="/login">Login</Link></p>
+    <div className="auth-page">
+      <div className="auth-card card">
+        <div className="auth-header">
+          <h1>Create account</h1>
+          <p>Join us and start shopping</p>
+        </div>
+
+        {error && <div className="alert alert-error">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+            <div className="form-group">
+              <label>First Name</label>
+              <input value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} placeholder="John" required />
+            </div>
+            <div className="form-group">
+              <label>Last Name</label>
+              <input value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} placeholder="Doe" required />
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Middle Name <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span></label>
+            <input value={form.middle_name} onChange={e => setForm({ ...form, middle_name: e.target.value })} placeholder="Optional" />
+          </div>
+          <div className="form-group">
+            <label>Email</label>
+            <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" required />
+          </div>
+          <div className="form-group">
+            <label>Password</label>
+            <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="Min. 8 characters" required />
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+            {loading ? 'Creating account...' : 'Create Account'}
+          </button>
+        </form>
+
+        <p className="auth-footer">
+          Already have an account? <Link to="/login">Sign in</Link>
+        </p>
+      </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    maxWidth: '400px',
-    margin: '50px auto',
-    padding: '20px',
-    textAlign: 'center'
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px'
-  },
-  input: {
-    padding: '10px',
-    fontSize: '16px',
-    borderRadius: '5px',
-    border: '1px solid #ccc'
-  },
-  button: {
-    padding: '10px',
-    fontSize: '16px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer'
-  },
-  error: {
-    color: 'red'
-  }
-};
-
-export default Register;

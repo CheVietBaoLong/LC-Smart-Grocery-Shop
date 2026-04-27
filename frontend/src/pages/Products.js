@@ -1,177 +1,108 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import API from '../api';
+import './Products.css';
 
-function Products() {
-  const [products, setProducts] = useState([]);
-  const [search, setSearch] = useState('');
-  const [message, setMessage] = useState('');
+export default function Products() {
   const { user } = useAuth();
+  const [products, setProducts] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [cartMsg, setCartMsg] = useState('');
 
   useEffect(() => {
-    fetchProducts();
+    API.get('/products').then(res => {
+      setProducts(res.data.data);
+      setFiltered(res.data.data);
+    }).finally(() => setLoading(false));
   }, []);
 
-  const fetchProducts = async () => {
-    try {
-      const response = await API.get('/products');
-      setProducts(response.data);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
-  };
+  useEffect(() => {
+    let result = products;
+    if (search) result = result.filter(p =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.brand?.toLowerCase().includes(search.toLowerCase())
+    );
+    if (category) result = result.filter(p => p.category === category);
+    setFiltered(result);
+  }, [search, category, products]);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await API.get(`/products/search?q=${search}`);
-      setProducts(response.data);
-    } catch (error) {
-      console.error('Error searching:', error);
-    }
-  };
+  const categories = [...new Set(products.map(p => p.category))];
 
-  const addToCart = async (productId) => {
-    if (!user) {
-      setMessage('Please login to add items to cart');
-      return;
+  const addToCart = (product) => {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const existing = cart.find(i => i.product_id === product.product_id);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      const price = product.product_price?.[0]?.sell_price || 0;
+      cart.push({ product_id: product.product_id, name: product.name, price, quantity: 1 });
     }
-
-    try {
-      await API.post(`/orders/cart/${user.userId}`, {
-        product_id: productId,
-        quantity: 1
-      });
-      setMessage('Added to cart!');
-      setTimeout(() => setMessage(''), 2000);
-    } catch (error) {
-      setMessage(error.response?.data?.error || 'Failed to add to cart');
-    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+    setCartMsg(`"${product.name}" added to cart!`);
+    setTimeout(() => setCartMsg(''), 2500);
   };
 
   const getPrice = (product) => {
-    if (product.product_price && product.product_price.length > 0) {
-      return parseFloat(product.product_price[0].sell_price).toFixed(2);
-    }
-    return 'N/A';
+    const price = product.product_price?.[0]?.sell_price;
+    return price ? `$${parseFloat(price).toFixed(2)}` : 'N/A';
   };
 
+  if (loading) return <div className="loading"><div className="spinner" />Loading products...</div>;
+
   return (
-    <div style={styles.container}>
-      <h1>Products</h1>
-      
-      {message && <p style={styles.message}>{message}</p>}
-      
-      <form onSubmit={handleSearch} style={styles.searchForm}>
+    <div className="page">
+      <div className="page-header">
+        <h1>Our Products</h1>
+        <p>Browse our full catalog</p>
+      </div>
+
+      {cartMsg && <div className="alert alert-success">{cartMsg}</div>}
+
+      <div className="products-filters">
         <input
-          type="text"
+          className="search-input"
           placeholder="Search products..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={styles.searchInput}
+          onChange={e => setSearch(e.target.value)}
         />
-        <button type="submit" style={styles.searchButton}>Search</button>
-        <button type="button" onClick={fetchProducts} style={styles.resetButton}>Reset</button>
-      </form>
-
-      <div style={styles.productsGrid}>
-        {products.map((product) => (
-          <div key={product.product_id} style={styles.productCard}>
-            <h3>{product.name}</h3>
-            <p style={styles.category}>{product.category}</p>
-            <p>{product.description}</p>
-            <p style={styles.brand}>{product.brand}</p>
-            <p style={styles.price}>${getPrice(product)}</p>
-            {user?.role === 'customer' && (
-              <button 
-                onClick={() => addToCart(product.product_id)}
-                style={styles.addButton}
-              >
-                Add to Cart
-              </button>
-            )}
-          </div>
-        ))}
+        <select value={category} onChange={e => setCategory(e.target.value)} className="category-select">
+          <option value="">All Categories</option>
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
       </div>
+
+      {filtered.length === 0 ? (
+        <div className="empty-state">
+          <h3>No products found</h3>
+          <p>Try adjusting your search or filters</p>
+        </div>
+      ) : (
+        <div className="products-grid">
+          {filtered.map(product => (
+            <div key={product.product_id} className="product-card card">
+              <div className="product-category">{product.category}</div>
+              <h3 className="product-name">{product.name}</h3>
+              {product.brand && <p className="product-brand">{product.brand}</p>}
+              {product.description && <p className="product-desc">{product.description}</p>}
+              <div className="product-meta">
+                {product.size && <span className="meta-tag">Size: {product.size}</span>}
+                {product.type && <span className="meta-tag">{product.type}</span>}
+              </div>
+              <div className="product-footer">
+                <span className="product-price">{getPrice(product)}</span>
+                {user?.role === 'customer' && (
+                  <button className="btn btn-primary btn-sm" onClick={() => addToCart(product)}>
+                    Add to Cart
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
-
-const styles = {
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '20px'
-  },
-  message: {
-    backgroundColor: '#d4edda',
-    color: '#155724',
-    padding: '10px',
-    borderRadius: '5px',
-    textAlign: 'center'
-  },
-  searchForm: {
-    display: 'flex',
-    gap: '10px',
-    marginBottom: '20px'
-  },
-  searchInput: {
-    flex: 1,
-    padding: '10px',
-    fontSize: '16px',
-    borderRadius: '5px',
-    border: '1px solid #ccc'
-  },
-  searchButton: {
-    padding: '10px 20px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer'
-  },
-  resetButton: {
-    padding: '10px 20px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer'
-  },
-  productsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-    gap: '20px'
-  },
-  productCard: {
-    border: '1px solid #ddd',
-    borderRadius: '10px',
-    padding: '15px',
-    backgroundColor: '#fff'
-  },
-  category: {
-    color: '#666',
-    fontSize: '14px'
-  },
-  brand: {
-    color: '#888',
-    fontStyle: 'italic'
-  },
-  price: {
-    fontSize: '20px',
-    fontWeight: 'bold',
-    color: '#28a745'
-  },
-  addButton: {
-    width: '100%',
-    padding: '10px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    marginTop: '10px'
-  }
-};
-
-export default Products;

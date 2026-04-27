@@ -13,8 +13,14 @@ async function findById(supplier_id) {
   });
 }
 
-async function create(data) {
-  return prisma.supplier.create({ data });
+async function create({ name, street, city, state, zip_code, country }) {
+  return prisma.supplier.create({
+    data: {
+      name,
+      ...(street && { address: { create: { street, city, state, zip_code, country } } }),
+    },
+    include: { address: true },
+  });
 }
 
 async function update(supplier_id, data) {

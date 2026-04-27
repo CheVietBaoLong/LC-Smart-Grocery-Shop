@@ -11,12 +11,18 @@ async function findAll() {
 async function findById(warehouse_id) {
   return prisma.warehouse.findUnique({
     where: { warehouse_id },
-    include: { address: true, stock: { include: { product: true } } },
+    include: { address: true, stock: { include: { products: true } } },
   });
 }
 
-async function create(data) {
-  return prisma.warehouse.create({ data });
+async function create({ capacity, street, city, state, zip_code, country }) {
+  return prisma.warehouse.create({
+    data: {
+      capacity,
+      address: { create: { street, city, state, zip_code, country } },
+    },
+    include: { address: true },
+  });
 }
 
 async function update(warehouse_id, data) {

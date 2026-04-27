@@ -27,4 +27,9 @@ app.use((req, res) => {
 // ── Global Error Handler (must be last) ───────────────────────────────────────
 app.use(errorHandler);
 
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  credentials: true,
+}));
+
 module.exports = app;

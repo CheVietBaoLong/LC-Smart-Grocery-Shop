@@ -12,4 +12,6 @@ router.get('/:id', auth, userController.getUserById);
 router.patch('/:id', auth, validate(updateUserSchema), userController.updateUser);
 router.delete('/:id', auth, requireRole('staff'), userController.deleteUser);
 
+router.post('/deposit', auth, requireRole('customer'), userController.deposit);
+
 module.exports = router;

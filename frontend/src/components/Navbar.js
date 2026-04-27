@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import './Navbar.css';
 
-function Navbar() {
+export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -11,75 +12,35 @@ function Navbar() {
   };
 
   return (
-    <nav style={styles.nav}>
-      <div style={styles.logo}>
-        <Link to="/" style={styles.logoLink}>🛒 Grocery Store</Link>
-      </div>
-      
-      <div style={styles.links}>
-        <Link to="/products" style={styles.link}>Products</Link>
-        
-        {user?.role === 'customer' && (
-          <>
-            <Link to="/cart" style={styles.link}>Cart</Link>
-            <Link to="/orders" style={styles.link}>My Orders</Link>
-            <Link to="/account" style={styles.link}>Account</Link>
-          </>
-        )}
-        
-        {user?.role === 'staff' && (
-          <Link to="/staff" style={styles.link}>Staff Dashboard</Link>
-        )}
-        
-        {user ? (
-          <button onClick={handleLogout} style={styles.logoutButton}>
-            Logout
-          </button>
-        ) : (
-          <>
-            <Link to="/login" style={styles.link}>Login</Link>
-            <Link to="/register" style={styles.link}>Register</Link>
-          </>
-        )}
+    <nav className="navbar">
+      <div className="navbar-inner">
+        <Link to="/" className="navbar-brand">
+          <span className="brand-icon">🛍</span>
+          <span className="brand-name">ShopDB</span>
+        </Link>
+
+        <div className="navbar-links">
+          {!user && <>
+            <Link to="/products" className="nav-link">Products</Link>
+            <Link to="/login" className="btn btn-primary btn-sm">Login</Link>
+            <Link to="/register" className="btn btn-outline btn-sm">Register</Link>
+          </>}
+
+          {user?.role === 'customer' && <>
+            <Link to="/products" className="nav-link">Products</Link>
+            <Link to="/cart" className="nav-link">🛒 Cart</Link>
+            <Link to="/orders" className="nav-link">Orders</Link>
+            <Link to="/account" className="nav-link">Account</Link>
+            <button onClick={handleLogout} className="btn btn-outline btn-sm">Logout</button>
+          </>}
+
+          {user?.role === 'staff' && <>
+            <Link to="/staff" className="nav-link">Dashboard</Link>
+            <Link to="/account" className="nav-link">Account</Link>
+            <button onClick={handleLogout} className="btn btn-outline btn-sm">Logout</button>
+          </>}
+        </div>
       </div>
     </nav>
   );
 }
-
-const styles = {
-  nav: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '15px 30px',
-    backgroundColor: '#343a40',
-    color: 'white'
-  },
-  logo: {
-    fontSize: '24px',
-    fontWeight: 'bold'
-  },
-  logoLink: {
-    color: 'white',
-    textDecoration: 'none'
-  },
-  links: {
-    display: 'flex',
-    gap: '20px',
-    alignItems: 'center'
-  },
-  link: {
-    color: 'white',
-    textDecoration: 'none'
-  },
-  logoutButton: {
-    padding: '8px 15px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer'
-  }
-};
-
-export default Navbar;

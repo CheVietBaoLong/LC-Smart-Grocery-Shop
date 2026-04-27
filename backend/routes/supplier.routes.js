@@ -12,7 +12,10 @@ router.get('/:id', auth, requireRole('staff'), supplierController.getSupplierByI
 router.post('/', auth, requireRole('staff'), validate(createSupplierSchema), supplierController.createSupplier);
 router.patch('/:id', auth, requireRole('staff'), validate(updateSupplierSchema), supplierController.updateSupplier);
 router.delete('/:id', auth, requireRole('staff'), supplierController.deleteSupplier);
-router.post('/:id/supplies', auth, requireRole('staff'), validate(addSupplySchema), supplierController.addSupply);
+
+// Supply relationships
+router.post('/:id/supplies', auth, requireRole('staff'), supplierController.addSupply);
+router.post('/:id/receive', auth, requireRole('staff'), supplierController.receiveSupply);
 router.get('/product/:productId/supplies', auth, requireRole('staff'), supplierController.getSuppliesByProduct);
 
 module.exports = router;
