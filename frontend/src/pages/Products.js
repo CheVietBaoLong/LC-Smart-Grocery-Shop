@@ -31,13 +31,34 @@ export default function Products() {
 
   const categories = [...new Set(products.map(p => p.category))];
 
+  const resolvePrice = (product) => {
+    const sell = product.product_price?.[0]?.sell_price != null ? parseFloat(product.product_price[0].sell_price) : null;
+    const supplier = product.supplies?.[0]?.supplier_price != null ? parseFloat(product.supplies[0].supplier_price) : null;
+    if (sell === null && supplier === null) return null;
+    if (sell === null) return supplier;
+    if (supplier === null) return sell;
+    return Math.min(sell, supplier);
+  };
+
+  const getTotalStock = (product) =>
+    (product.stock || []).reduce((sum, s) => sum + (s.quantity || 0), 0);
+
   const addToCart = (product) => {
+    const totalStock = getTotalStock(product);
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const existing = cart.find(i => i.product_id === product.product_id);
+    const currentQty = existing?.quantity || 0;
+
+    if (currentQty >= totalStock) {
+      setCartMsg(`Only ${totalStock} unit${totalStock !== 1 ? 's' : ''} available for "${product.name}"`);
+      setTimeout(() => setCartMsg(''), 2500);
+      return;
+    }
+
     if (existing) {
       existing.quantity += 1;
     } else {
-      const price = product.product_price?.[0]?.sell_price || 0;
+      const price = resolvePrice(product) || 0;
       cart.push({ product_id: product.product_id, name: product.name, price, quantity: 1 });
     }
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -46,7 +67,7 @@ export default function Products() {
   };
 
   const getPrice = (product) => {
-    const price = product.product_price?.[0]?.sell_price;
+    const price = resolvePrice(product);
     return price ? `$${parseFloat(price).toFixed(2)}` : 'N/A';
   };
 
@@ -93,11 +114,12 @@ export default function Products() {
               </div>
               <div className="product-footer">
                 <span className="product-price">{getPrice(product)}</span>
-                {user?.role === 'customer' && (
-                  <button className="btn btn-primary btn-sm" onClick={() => addToCart(product)}>
-                    Add to Cart
-                  </button>
-                )}
+                {user?.role === 'customer' && (() => {
+                  const stock = getTotalStock(product);
+                  return stock > 0
+                    ? <button className="btn btn-primary btn-sm" onClick={() => addToCart(product)}>Add to Cart</button>
+                    : <span className="meta-tag" style={{ color: 'var(--danger, #e53e3e)' }}>Out of Stock</span>;
+                })()}
               </div>
             </div>
           ))}

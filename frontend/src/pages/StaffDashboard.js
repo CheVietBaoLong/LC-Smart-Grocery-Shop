@@ -119,8 +119,10 @@ function ProductsTab() {
   };
 
   const getPrice = (product) => {
-    const price = product.product_price?.[0]?.sell_price;
-    return price ? `$${parseFloat(price).toFixed(2)}` : '—';
+    const sell = product.product_price?.[0]?.sell_price != null ? parseFloat(product.product_price[0].sell_price) : null;
+    const supplier = product.supplies?.[0]?.supplier_price != null ? parseFloat(product.supplies[0].supplier_price) : null;
+    const price = sell === null ? supplier : supplier === null ? sell : Math.min(sell, supplier);
+    return price != null ? `$${price.toFixed(2)}` : '—';
   };
 
   return (
