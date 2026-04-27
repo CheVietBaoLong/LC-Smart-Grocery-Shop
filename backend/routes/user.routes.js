@@ -17,4 +17,6 @@ router.patch('/:id', auth, userController.updateUser);
 // DELETE /api/users/:id   — staff only
 router.delete('/:id', auth, requireRole('staff'), userController.deleteUser);
 
+router.post('/deposit', auth, requireRole('customer'), userController.deposit);
+
 module.exports = router;

@@ -17,8 +17,8 @@ async function findById(product_id) {
       product_price: {
         where: { end_date: null },
       },
-      stocks: {
-        include: { warehouse: true },
+      stock: {
+        include: { warehouses: true },
       },
     },
   });

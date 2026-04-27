@@ -1,0 +1,107 @@
+.account-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.balance-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, var(--primary) 0%, #2d2d5e 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+}
+
+.balance-label {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.balance-amount {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.balance-icon { font-size: 2.5rem; opacity: 0.4; }
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 { font-size: 1.3rem; }
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.list-item-title {
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.list-item-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Address toggle */
+.address-toggle {
+  display: flex;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 0.4rem;
+  border: none;
+  background: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-muted);
+}
+
+.toggle-btn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.new-address-form input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  background: var(--bg);
+  transition: border-color 0.2s;
+}
+
+.new-address-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+}
+
+@media (max-width: 768px) {
+  .account-grid { grid-template-columns: 1fr; }
+}

@@ -40,4 +40,13 @@ async function deleteUser(req, res, next) {
   }
 }
 
-module.exports = { getAllUsers, getUserById, updateUser, deleteUser };
+async function deposit(req, res, next) {
+  try {
+    const result = await userService.deposit(req.user.user_id, parseFloat(req.body.amount));
+    res.status(200).json({ status: 'success', data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getAllUsers, getUserById, updateUser, deleteUser, deposit };

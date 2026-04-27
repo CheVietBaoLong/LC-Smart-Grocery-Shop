@@ -5,10 +5,10 @@ const requireRole = require('../middlewares/role.middleware');
 
 const router = Router();
 
-// Customer address management — /api/me/addresses
-router.get('/addresses', auth, requireRole('customer'), addressController.getMyAddresses);
-router.post('/addresses', auth, requireRole('customer'), addressController.addAddress);
-router.delete('/addresses/:addressId', auth, requireRole('customer'), addressController.removeAddress);
+// Address management — /api/me/addresses (any authenticated user)
+router.get('/addresses', auth, addressController.getMyAddresses);
+router.post('/addresses', auth, addressController.addAddress);
+router.delete('/addresses/:addressId', auth, addressController.removeAddress);
 
 // Customer payment cards — /api/me/cards
 router.get('/cards', auth, requireRole('customer'), addressController.getMyCards);

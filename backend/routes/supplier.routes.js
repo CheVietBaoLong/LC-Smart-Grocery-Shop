@@ -14,6 +14,7 @@ router.delete('/:id', auth, requireRole('staff'), supplierController.deleteSuppl
 
 // Supply relationships
 router.post('/:id/supplies', auth, requireRole('staff'), supplierController.addSupply);
+router.post('/:id/receive', auth, requireRole('staff'), supplierController.receiveSupply);
 router.get('/product/:productId/supplies', auth, requireRole('staff'), supplierController.getSuppliesByProduct);
 
 module.exports = router;

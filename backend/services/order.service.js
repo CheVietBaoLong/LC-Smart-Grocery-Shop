@@ -41,10 +41,16 @@ async function createOrder({ user_id, card_id, delivery_id, order_date, items, a
     })
   );
 
+  const total = enrichedItems.reduce(
+    (sum, { quantity, purchase_price }) => sum + quantity * Number(purchase_price),
+    0
+  );
+
   return orderRepo.create({
-    orderData: { user_id, card_id, delivery_id, order_date, status: 'Pending' },
+    orderData: { user_id, card_id, delivery_id, order_date: new Date(order_date), status: 'Pending' },
     items: enrichedItems,
     address_id,
+    total,
   });
 }
 
@@ -72,7 +78,12 @@ async function cancelOrder(order_id, requesterId, requesterRole) {
     throw new BadRequestError('Only Pending or Processing orders can be cancelled');
   }
 
-  return orderRepo.updateStatus(order_id, 'Cancelled');
+  const refundAmount = order.order_item.reduce(
+    (sum, item) => sum + item.quantity * Number(item.purchase_price),
+    0
+  );
+
+  return orderRepo.cancelAndRefund(order_id, order.user_id, refundAmount);
 }
 
 module.exports = {

@@ -38,7 +38,7 @@ async function getCurrentPrice(product_id) {
 async function setNewPrice(product_id, sell_price, start_date) {
   const product = await productRepo.findById(product_id);
   if (!product) throw new NotFoundError(`Product ${product_id} not found`);
-  return productRepo.addPrice({ product_id, sell_price, start_date });
+  return productRepo.addPrice({ product_id, sell_price, start_date: new Date(start_date) });
 }
 
 async function getPriceHistory(product_id) {

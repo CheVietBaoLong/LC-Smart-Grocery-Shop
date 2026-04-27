@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const userRepo = require('../repositories/user.repository');
-const { NotFoundError, ForbiddenError } = require('../utils/errors');
+const { NotFoundError, ForbiddenError, BadRequestError } = require('../utils/errors');
 
 const SALT_ROUNDS = 10;
 
@@ -24,9 +24,15 @@ async function updateUser(requesterId, requesterRole, targetId, data) {
   const user = await userRepo.findById(targetId);
   if (!user) throw new NotFoundError(`User ${targetId} not found`);
 
-  // If updating password, hash it
   if (data.password) {
+    if (!data.old_password) {
+      throw new BadRequestError('Current password is required to change password');
+    }
+    const fullUser = await userRepo.findByIdFull(targetId);
+    const isMatch = await bcrypt.compare(data.old_password, fullUser.password);
+    if (!isMatch) throw new BadRequestError('Current password is incorrect');
     data.password = await bcrypt.hash(data.password, SALT_ROUNDS);
+    delete data.old_password;
   }
 
   return userRepo.update(targetId, data);
@@ -38,4 +44,9 @@ async function deleteUser(user_id) {
   return userRepo.remove(user_id);
 }
 
-module.exports = { getAllUsers, getUserById, updateUser, deleteUser };
+async function deposit(user_id, amount) {
+  if (amount <= 0) throw new BadRequestError('Amount must be positive');
+  return userRepo.deposit(user_id, amount);
+}
+
+module.exports = { getAllUsers, getUserById, updateUser, deleteUser, deposit };

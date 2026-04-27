@@ -8,6 +8,8 @@ async function findAll() {
       middle_name: true,
       last_name: true,
       email: true,
+      customer: { select: { balance: true } },
+      staff: { select: { job_title: true, salary: true } },
     },
   });
 }
@@ -21,13 +23,18 @@ async function findById(user_id) {
       middle_name: true,
       last_name: true,
       email: true,
+      customer: { select: { balance: true } },
+      staff: { select: { job_title: true, salary: true } },
     },
   });
 }
 
 async function findByEmail(email) {
-  // Includes password — only for auth use, never send to client
   return prisma.users.findUnique({ where: { email } });
+}
+
+async function findByIdFull(user_id) {
+  return prisma.users.findUnique({ where: { user_id } });
 }
 
 async function create(data) {
@@ -61,4 +68,11 @@ async function remove(user_id) {
   return prisma.users.delete({ where: { user_id } });
 }
 
-module.exports = { findAll, findById, findByEmail, create, update, remove };
+async function deposit(user_id, amount) {
+  return prisma.customer.update({
+    where: { user_id },
+    data: { balance: { increment: amount } },
+  });
+}
+
+module.exports = { findAll, findById, findByIdFull, findByEmail, create, update, remove, deposit };

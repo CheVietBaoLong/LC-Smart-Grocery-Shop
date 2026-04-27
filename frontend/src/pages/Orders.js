@@ -1,123 +1,88 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../api';
 
-function Orders() {
-  const [orders, setOrders] = useState([]);
+export default function Orders() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchOrders();
-    }
-  }, [user]);
+    if (!user) return navigate('/login');
+    API.get('/orders/my').then(r => setOrders(r.data.data)).finally(() => setLoading(false));
+  }, [user, navigate]);
 
-  const fetchOrders = async () => {
+  const cancelOrder = async (order_id) => {
+    if (!window.confirm('Cancel this order?')) return;
     try {
-      const response = await API.get(`/orders/history/${user.userId}`);
-      setOrders(response.data);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
+      await API.patch(`/orders/${order_id}/cancel`);
+      setOrders(orders.map(o => o.order_id === order_id ? { ...o, status: 'Cancelled' } : o));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Cannot cancel this order');
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
+  const statusClass = (s) => `badge badge-${s?.toLowerCase()}`;
 
-  const getOrderTotal = (order) => {
-    return order.order_item.reduce((sum, item) => {
-      return sum + (parseFloat(item.purchase_price) * item.quantity);
-    }, 0).toFixed(2);
-  };
-
-  if (!user) {
-    return (
-      <div style={styles.container}>
-        <h1>My Orders</h1>
-        <p>Please <a href="/login">login</a> to view your orders.</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="loading"><div className="spinner" />Loading orders...</div>;
 
   return (
-    <div style={styles.container}>
-      <h1>My Orders</h1>
+    <div className="page">
+      <div className="page-header"><h1>My Orders</h1><p>Track your order history</p></div>
 
       {orders.length === 0 ? (
-        <p>You haven't placed any orders yet.</p>
+        <div className="empty-state">
+          <h3>No orders yet</h3>
+          <p>Your orders will appear here once you place one</p>
+          <button className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={() => navigate('/products')}>
+            Start Shopping
+          </button>
+        </div>
       ) : (
-        orders.map((order) => (
-          <div key={order.order_id} style={styles.orderCard}>
-            <div style={styles.orderHeader}>
-              <h3>Order #{order.order_id}</h3>
-              <span style={styles.status}>{order.status}</span>
-            </div>
-            <p>Date: {formatDate(order.order_date)}</p>
-            
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Price</th>
-                  <th>Quantity</th>
-                  <th>Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.order_item.map((item) => (
-                  <tr key={item.product_id}>
-                    <td>{item.product?.name}</td>
-                    <td>${parseFloat(item.purchase_price).toFixed(2)}</td>
-                    <td>{item.quantity}</td>
-                    <td>${(parseFloat(item.purchase_price) * item.quantity).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {orders.map(order => (
+            <div key={order.order_id} className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Order #{order.order_id}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{order.order_date}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span className={statusClass(order.status)}>{order.status}</span>
+                  {['Pending', 'Processing'].includes(order.status) && (
+                    <button className="btn btn-danger btn-sm" onClick={() => cancelOrder(order.order_id)}>Cancel</button>
+                  )}
+                </div>
+              </div>
 
-            <p style={styles.total}>Total: ${getOrderTotal(order)}</p>
-          </div>
-        ))
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Qty</th>
+                      <th>Price</th>
+                      <th>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {order.order_item?.map(item => (
+                      <tr key={item.product_id}>
+                        <td>{item.product?.name || `Product #${item.product_id}`}</td>
+                        <td>{item.quantity}</td>
+                        <td>${parseFloat(item.purchase_price).toFixed(2)}</td>
+                        <td>${(item.quantity * parseFloat(item.purchase_price)).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
 }
-
-const styles = {
-  container: {
-    maxWidth: '900px',
-    margin: '0 auto',
-    padding: '20px'
-  },
-  orderCard: {
-    border: '1px solid #ddd',
-    borderRadius: '10px',
-    padding: '20px',
-    marginBottom: '20px',
-    backgroundColor: '#fff'
-  },
-  orderHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  status: {
-    padding: '5px 10px',
-    backgroundColor: '#ffc107',
-    borderRadius: '5px',
-    fontWeight: 'bold'
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    margin: '15px 0'
-  },
-  total: {
-    textAlign: 'right',
-    fontSize: '18px',
-    fontWeight: 'bold'
-  }
-};
-
-export default Orders;
