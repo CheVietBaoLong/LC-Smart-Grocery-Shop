@@ -47,13 +47,16 @@ async function getCurrentPrice(product_id) {
 
 async function addPrice(data) {
   return prisma.$transaction(async (tx) => {
-    // Close the previous active price
     await tx.product_price.updateMany({
       where: { product_id: data.product_id, end_date: null },
-      data: { end_date: data.start_date },
+      data: { end_date: new Date(data.start_date) },
     });
-    // Insert the new price
-    return tx.product_price.create({ data });
+    return tx.product_price.create({
+      data: {
+        ...data,
+        start_date: new Date(data.start_date),
+      },
+    });
   });
 }
 

@@ -14,7 +14,7 @@ async function registerCustomer({ first_name, middle_name, last_name, email, pas
 
   return prisma.$transaction(async (tx) => {
     const newUser = await tx.users.create({
-      data: { user_id: userId, first_name, middle_name, last_name, email, password: hashed },
+      data: { first_name, middle_name, last_name, email, password: hashed },
     });
 
     await tx.customer.create({
@@ -40,7 +40,7 @@ async function registerStaff({ first_name, middle_name, last_name, email, passwo
 
   return prisma.$transaction(async (tx) => {
     const newUser = await tx.users.create({
-      data: { user_id: userId, first_name, middle_name, last_name, email, password: hashed },
+      data: { first_name, middle_name, last_name, email, password: hashed },
     });
 
     await tx.staff.create({
