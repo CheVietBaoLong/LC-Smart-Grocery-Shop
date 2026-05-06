@@ -6,11 +6,12 @@ const orderItemSchema = z.object({
 });
 
 const createOrderSchema = z.object({
-  card_id:     z.number().int().positive().optional(),
-  delivery_id: z.number().int().positive().optional(),
-  order_date:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
-  items:       z.array(orderItemSchema).min(1, 'Order must have at least one item'),
-  address_id:  z.number().int().positive().optional(),
+  card_id:       z.number().int().positive().optional(),
+  delivery_id:   z.number().int().positive().optional(),
+  delivery_type: z.enum(['Express', 'Standard']).optional(),
+  order_date:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+  items:         z.array(orderItemSchema).min(1, 'Order must have at least one item'),
+  address_id:    z.number().int().positive().optional(),
 });
 
 const updateStatusSchema = z.object({

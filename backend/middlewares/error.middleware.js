@@ -10,6 +10,14 @@ function errorHandler(err, req, res, next) {
     });
   }
 
+  // Prisma validation errors (wrong types / missing required fields)
+  if (err instanceof Prisma.PrismaClientValidationError) {
+    return res.status(400).json({
+      status: 'error',
+      message: err.message,
+    });
+  }
+
   // Prisma known errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     // Unique constraint violation

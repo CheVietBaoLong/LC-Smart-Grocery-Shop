@@ -11,7 +11,7 @@ export default function Cart() {
   const [cards, setCards] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [balance, setBalance] = useState(0);
-  const [form, setForm] = useState({ card_id: '', address_id: '' });
+  const [form, setForm] = useState({ card_id: '', address_id: '', delivery_type: 'Standard' });
   const [newAddress, setNewAddress] = useState({ country: '', street: '', city: '', state: '', zip_code: '' });
   const [useNewAddress, setUseNewAddress] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -40,15 +40,19 @@ export default function Cart() {
     localStorage.setItem('cart', JSON.stringify(updated));
   };
 
-  const total = cart.reduce((sum, i) => sum + (parseFloat(i.price) * i.quantity), 0);
+  const DELIVERY_COSTS = { Standard: 10.00, Express: 25.00 };
+  const itemsTotal = cart.reduce((sum, i) => sum + (parseFloat(i.price) * i.quantity), 0);
+  const deliveryCost = DELIVERY_COSTS[form.delivery_type] || 0;
+  const total = itemsTotal + deliveryCost;
 
   const placeOrder = async () => {
     setError('');
     if (cart.length === 0) return setError('Your cart is empty');
     if (!form.card_id) return setError('Please select a payment card');
+    if (!form.delivery_type) return setError('Please select a delivery type');
     if (!useNewAddress && !form.address_id) return setError('Please select a shipping address');
     if (useNewAddress && !newAddress.street) return setError('Please fill in the shipping address');
-    if (balance < total) return setError(`Insufficient balance. Your balance is $${balance.toFixed(2)} but order total is $${total.toFixed(2)}`);
+    if (!form.card_id && balance < total) return setError(`Insufficient balance. Your balance is $${balance.toFixed(2)} but order total is $${total.toFixed(2)}`);
 
     setLoading(true);
     try {
@@ -62,6 +66,7 @@ export default function Cart() {
       await API.post('/orders', {
         card_id: parseInt(form.card_id),
         address_id,
+        delivery_type: form.delivery_type,
         order_date: new Date().toISOString().split('T')[0],
         items: cart.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
       });
@@ -142,6 +147,15 @@ export default function Cart() {
             )}
           </div>
 
+          {/* Delivery type */}
+          <div className="form-group">
+            <label>Delivery Type *</label>
+            <select value={form.delivery_type} onChange={e => setForm({ ...form, delivery_type: e.target.value })} required>
+              <option value="Standard">Standard — $10.00 (7–10 days)</option>
+              <option value="Express">Express — $25.00 (2–3 days)</option>
+            </select>
+          </div>
+
           {/* Shipping address */}
           <div className="form-group">
             <label>Shipping Address *</label>
@@ -180,18 +194,26 @@ export default function Cart() {
 
           {/* Total */}
           <div className="summary-total">
+            <span>Items</span>
+            <span>${itemsTotal.toFixed(2)}</span>
+          </div>
+          <div className="summary-total">
+            <span>Delivery ({form.delivery_type})</span>
+            <span>${deliveryCost.toFixed(2)}</span>
+          </div>
+          <div className="summary-total" style={{ fontWeight: 'bold', borderTop: '1px solid var(--border)', paddingTop: '0.5rem' }}>
             <span>Total</span>
             <span>${total.toFixed(2)}</span>
           </div>
 
-          {balance < total && (
+          {!form.card_id && balance < total && (
             <p style={{ fontSize: '0.8rem', color: 'var(--danger)', marginTop: '0.5rem' }}>
-              ⚠ Insufficient balance to place this order
+              ⚠ Insufficient balance — select a card to pay by card instead
             </p>
           )}
 
           <button className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}
-            onClick={placeOrder} disabled={loading || balance < total}>
+            onClick={placeOrder} disabled={loading || (!form.card_id && balance < total)}>
             {loading ? 'Placing Order...' : 'Place Order'}
           </button>
         </div>

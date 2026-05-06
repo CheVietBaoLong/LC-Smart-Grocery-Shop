@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma *)",
+      "Bash(node server.js)",
+      "Bash(curl -s http://localhost:5000)",
+      "Bash(curl -s http://localhost:5000/api/products)",
+      "Bash(npm install *)",
+      "Bash(curl -s http://localhost:5000/api/me/addresses -H \"Authorization: Bearer badtoken\")",
+      "Bash(curl -s -X POST http://localhost:5000/api/orders -H 'Content-Type: application/json' -H 'Authorization: Bearer test' -d '{\"card_id\":1,\"delivery_type\":\"Standard\",\"order_date\":\"2026-04-27\",\"items\":[{\"product_id\":1,\"quantity\":1}],\"address_id\":1}')",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

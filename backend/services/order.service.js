@@ -2,6 +2,7 @@ const orderRepo = require('../repositories/order.repository');
 const productRepo = require('../repositories/product.repository');
 const warehouseRepo = require('../repositories/warehouse.repository');
 const { NotFoundError, BadRequestError, ForbiddenError } = require('../utils/errors');
+const { Prisma } = require('@prisma/client');
 
 async function getAllOrders() {
   return orderRepo.findAll();
@@ -23,7 +24,12 @@ async function getMyOrders(user_id) {
   return orderRepo.findByCustomer(user_id);
 }
 
-async function createOrder({ user_id, card_id, delivery_id, order_date, items, address_id }) {
+const DELIVERY_OPTIONS = {
+  Express:  { cost: 25.00, shipDays: 1,  deliverDays: 3  },
+  Standard: { cost: 10.00, shipDays: 3,  deliverDays: 10 },
+};
+
+async function createOrder({ user_id, card_id, delivery_id, delivery_type, order_date, items, address_id }) {
   if (!items || items.length === 0) {
     throw new BadRequestError('Order must contain at least one item');
   }
@@ -41,13 +47,36 @@ async function createOrder({ user_id, card_id, delivery_id, order_date, items, a
     })
   );
 
-  const total = enrichedItems.reduce(
+  const itemsTotal = enrichedItems.reduce(
     (sum, { quantity, purchase_price }) => sum + quantity * Number(purchase_price),
     0
   );
 
+  let deliveryPlanData = null;
+  let deliveryCost = 0;
+
+  if (delivery_type) {
+    const option = DELIVERY_OPTIONS[delivery_type];
+    if (!option) throw new BadRequestError(`Invalid delivery type: ${delivery_type}`);
+    const orderDateObj = new Date(order_date);
+    const ship_date = new Date(orderDateObj);
+    ship_date.setDate(ship_date.getDate() + option.shipDays);
+    const delivery_date = new Date(orderDateObj);
+    delivery_date.setDate(delivery_date.getDate() + option.deliverDays);
+    deliveryPlanData = {
+      delivery_type,
+      delivery_cost: new Prisma.Decimal(option.cost),
+      ship_date,
+      delivery_date,
+    };
+    deliveryCost = option.cost;
+  }
+
+  const total = itemsTotal + deliveryCost;
+
   return orderRepo.create({
     orderData: { user_id, card_id, delivery_id, order_date: new Date(order_date), status: 'Pending' },
+    deliveryPlanData,
     items: enrichedItems,
     address_id,
     total,

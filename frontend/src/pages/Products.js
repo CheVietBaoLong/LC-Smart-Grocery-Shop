@@ -32,12 +32,8 @@ export default function Products() {
   const categories = [...new Set(products.map(p => p.category))];
 
   const resolvePrice = (product) => {
-    const sell = product.product_price?.[0]?.sell_price != null ? parseFloat(product.product_price[0].sell_price) : null;
-    const supplier = product.supplies?.[0]?.supplier_price != null ? parseFloat(product.supplies[0].supplier_price) : null;
-    if (sell === null && supplier === null) return null;
-    if (sell === null) return supplier;
-    if (supplier === null) return sell;
-    return Math.min(sell, supplier);
+    const sell = product.product_price?.[0]?.sell_price;
+    return sell != null ? parseFloat(sell) : null;
   };
 
   const getTotalStock = (product) =>
@@ -114,12 +110,11 @@ export default function Products() {
               </div>
               <div className="product-footer">
                 <span className="product-price">{getPrice(product)}</span>
-                {user?.role === 'customer' && (() => {
-                  const stock = getTotalStock(product);
-                  return stock > 0
+                {user?.role === 'customer' && (
+                  getTotalStock(product) > 0
                     ? <button className="btn btn-primary btn-sm" onClick={() => addToCart(product)}>Add to Cart</button>
-                    : <span className="meta-tag" style={{ color: 'var(--danger, #e53e3e)' }}>Out of Stock</span>;
-                })()}
+                    : <span className="out-of-stock">Out of Stock</span>
+                )}
               </div>
             </div>
           ))}

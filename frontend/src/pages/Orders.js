@@ -79,6 +79,18 @@ export default function Orders() {
                   </tbody>
                 </table>
               </div>
+
+              {order.delivery_plan && (
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'var(--surface)', borderRadius: '8px', fontSize: '0.875rem' }}>
+                  <strong>Delivery Plan</strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem', marginTop: '0.4rem' }}>
+                    <div><span style={{ color: 'var(--text-muted)' }}>Type: </span>{order.delivery_plan.delivery_type}</div>
+                    <div><span style={{ color: 'var(--text-muted)' }}>Cost: </span>${parseFloat(order.delivery_plan.delivery_cost).toFixed(2)}</div>
+                    <div><span style={{ color: 'var(--text-muted)' }}>Ship Date: </span>{order.delivery_plan.ship_date?.split('T')[0]}</div>
+                    <div><span style={{ color: 'var(--text-muted)' }}>Delivery Date: </span>{order.delivery_plan.delivery_date?.split('T')[0]}</div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
