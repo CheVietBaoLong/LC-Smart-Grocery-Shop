@@ -1,6 +1,11 @@
-=======
 # 🛒 Smart Grocery Shopping App
-=======
+___
+
+
+***
+
+
+---
 A full-stack online grocery shopping application that helps customers plan meals, manage grocery spending, and optimize their shopping experience.
 
 ---
