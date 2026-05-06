@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-# group15
 =======
 # 🛒 Smart Grocery Shopping App
 
@@ -161,4 +159,3 @@ The app uses a PostgreSQL relational database with the following core entities:
 - `Addresses` & `Credit Cards` (customer account management)
 
 ---
->>>>>>> 2ebcaa88da2d5d43dca1e7f4b756a5713ca21c92
