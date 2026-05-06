@@ -140,11 +140,11 @@ Frontend and backend runs at `http://localhost:5000`
 
 ## 👥 Team Contributions
 
-| Member | Contributions | GitHub |
+| Member | Contributions | Contact |
 |--------|---------------|--------|
-| Viet Bao Long | Backend development, database schema design, authentication system (JWT + bcrypt), API routes, page structure | CheVietBaoLong |
-| Lan Duong | Frontend development, UI/UX design, backend architecture optimization | |
-| Eirlys Vo | ER model design, database schema design and development | |
+| Viet Bao Long | Backend development, database schema design, authentication system (JWT + bcrypt), API routes, page structure | chelv@mail.uc.edu |
+| Lan Duong | Frontend development, UI/UX design, backend architecture optimization | duonglh@mail.uc.edu |
+| Eirlys Vo | ER model design, database schema design and development | vopq@gmail.com |
 ---
 
 ## 📚 Database Design
